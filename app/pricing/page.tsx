@@ -96,7 +96,8 @@ export default function PricingPage() {
       })
 
       if (res.status === 401) {
-        window.location.href = `/login?redirect=/pricing`
+        toast.error('Авторизуйтесь, чтобы оплатить тариф')
+        setTimeout(() => { window.location.href = `/login?redirect=/pricing` }, 1500)
         return
       }
 
