@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/dashboard'
 
   async function onReset() {
     if (!email) {
@@ -50,7 +52,7 @@ export default function LoginPage() {
         toast.error('Неверный email или пароль.')
       }
     } else {
-      router.push('/dashboard')
+      router.push(redirectTo)
       router.refresh()
     }
     setLoading(false)

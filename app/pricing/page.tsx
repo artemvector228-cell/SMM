@@ -94,11 +94,18 @@ export default function PricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       })
+
+      if (res.status === 401) {
+        window.location.href = `/login?redirect=/pricing`
+        return
+      }
+
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
         toast.error('Не удалось создать платёж. Попробуйте ещё раз.')
+        console.error('[pricing] checkout error:', data)
       }
     } catch {
       toast.error('Ошибка соединения. Попробуйте ещё раз.')
