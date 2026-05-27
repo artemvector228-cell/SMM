@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
+.claude/
+
+# test files & screenshots
+test-*.mjs
+test-*.png
+*.png
+
+# supabase schema (local only)
+supabase-schema.sql
