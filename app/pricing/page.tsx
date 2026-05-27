@@ -104,7 +104,8 @@ export default function PricingPage() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        toast.error('Не удалось создать платёж. Попробуйте ещё раз.')
+        const detail = data.details ?? data.error ?? 'Неизвестная ошибка'
+        toast.error(`Ошибка: ${detail}`)
         console.error('[pricing] checkout error:', data)
       }
     } catch {

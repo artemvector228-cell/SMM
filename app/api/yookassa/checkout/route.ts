@@ -13,6 +13,13 @@ const PLAN_LABELS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+    if (!appUrl) {
+      throw new Error(
+        'Missing required env var NEXT_PUBLIC_APP_URL. Add it in Vercel Project Settings -> Environment Variables.'
+      )
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -31,13 +38,14 @@ export async function POST(request: NextRequest) {
       amount: { value: amount, currency: 'RUB' },
       description: `Revenue OS — тариф ${PLAN_LABELS[plan]}`,
       metadata: { user_id: user.id, plan, email: user.email ?? '' },
-      returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
+      returnUrl: `${appUrl}/dashboard?upgraded=true`,
       idempotenceKey: randomUUID(),
     })
 
     return NextResponse.json({ url: payment.confirmation?.confirmation_url })
   } catch (error) {
-    console.error('[/api/yookassa/checkout]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[/api/yookassa/checkout]', message)
+    return NextResponse.json({ error: 'Internal server error', details: message }, { status: 500 })
   }
 }
