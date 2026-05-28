@@ -88,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109466757', 'ym');
           ym(109466757, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
         `}</Script>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <noscript><div><img src="https://mc.yandex.ru/watch/109466757" style={{position:'absolute', left:'-9999px'}} alt="" /></div></noscript>
       </body>
     </html>
