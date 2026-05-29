@@ -1,21 +1,19 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Send, X, Smile, ImageIcon, Video, Trash2, Check } from 'lucide-react'
+import { Send, X, Smile, ImageIcon, Video, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Generation } from '@/types'
 
-// ── Emoji picker data ──────────────────────────────────────────────────────
 const EMOJI_GROUPS = [
-  { label: 'Огонь', emojis: ['🔥','⚡','💥','✨','💫','🌟','⭐','🏆','🎯','🎉'] },
-  { label: 'Бизнес', emojis: ['📈','💰','💎','🚀','💡','📊','💼','🔑','📣','🎁'] },
-  { label: 'Жесты', emojis: ['👇','👆','👉','💪','👍','🙌','🤝','✅','☑️','❤️'] },
-  { label: 'Смайлы', emojis: ['😊','😎','🤔','😤','🥳','🤩','😍','🙏','😮','🤑'] },
-  { label: 'Знаки', emojis: ['📌','🔔','⚠️','💬','📩','📱','🌐','🔗','📝','⏰'] },
+  { label: 'Огонь',   emojis: ['🔥','⚡','💥','✨','💫','🌟','⭐','🏆','🎯','🎉'] },
+  { label: 'Бизнес',  emojis: ['📈','💰','💎','🚀','💡','📊','💼','🔑','📣','🎁'] },
+  { label: 'Жесты',   emojis: ['👇','👆','👉','💪','👍','🙌','🤝','✅','☑️','❤️'] },
+  { label: 'Смайлы',  emojis: ['😊','😎','🤔','😤','🥳','🤩','😍','🙏','😮','🤑'] },
+  { label: 'Знаки',   emojis: ['📌','🔔','⚠️','💬','📩','📱','🌐','🔗','📝','⏰'] },
 ]
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function buildText(gen: Generation, format: 'telegram' | 'instagram'): string {
   if (format === 'telegram') {
     const tg = gen.output_json?.telegram_post
@@ -43,7 +41,6 @@ async function getTgCredentials() {
   return { botToken, chatId }
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
 export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose: () => void }) {
   const [format, setFormat] = useState<'telegram' | 'instagram'>('telegram')
   const [text, setText] = useState(() => buildText(gen, 'telegram'))
@@ -54,6 +51,24 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    if (!emojiOpen) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-emoji-picker]')) setEmojiOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [emojiOpen])
+
   function switchFormat(f: 'telegram' | 'instagram') {
     setFormat(f)
     setText(buildText(gen, f))
@@ -61,12 +76,11 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
 
   const insertEmoji = useCallback((emoji: string) => {
     const el = textareaRef.current
-    if (!el) { setText(t => t + emoji); return }
+    if (!el) { setText(t => t + emoji); setEmojiOpen(false); return }
     const start = el.selectionStart
     const end = el.selectionEnd
     const newText = text.slice(0, start) + emoji + text.slice(end)
     setText(newText)
-    // restore cursor after state update
     requestAnimationFrame(() => {
       el.selectionStart = el.selectionEnd = start + emoji.length
       el.focus()
@@ -99,19 +113,15 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
     if (!text.trim() && !mediaFile) { toast.error('Добавьте текст или медиафайл'); return }
     setSending(true)
     try {
-      let ok = false
       if (mediaFile) {
-        const isVideo = mediaFile.type.startsWith('video/')
-        const method = isVideo ? 'sendVideo' : 'sendPhoto'
-        const field = isVideo ? 'video' : 'photo'
+        const isVid = mediaFile.type.startsWith('video/')
         const fd = new FormData()
         fd.append('chat_id', chatId)
-        fd.append(field, mediaFile)
+        fd.append(isVid ? 'video' : 'photo', mediaFile)
         if (text.trim()) fd.append('caption', text.trim())
-        const res = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, { method: 'POST', body: fd })
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/${isVid ? 'sendVideo' : 'sendPhoto'}`, { method: 'POST', body: fd })
         const data = await res.json()
-        ok = data.ok
-        if (!ok) throw new Error(data.description ?? 'Ошибка Telegram')
+        if (!data.ok) throw new Error(data.description ?? 'Ошибка Telegram')
       } else {
         const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
@@ -119,8 +129,7 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
           body: JSON.stringify({ chat_id: chatId, text: text.trim() }),
         })
         const data = await res.json()
-        ok = data.ok
-        if (!ok) throw new Error(data.description ?? 'Ошибка Telegram')
+        if (!data.ok) throw new Error(data.description ?? 'Ошибка Telegram')
       }
       toast.success('Отправлено в Telegram! ✈️')
       onClose()
@@ -131,48 +140,65 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
     }
   }
 
-  const isVideo = mediaFile?.type.startsWith('video/')
+  const isVideoFile = mediaFile?.type.startsWith('video/')
 
   return (
     <>
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
       />
-      {/* Modal */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', pointerEvents: 'none' }}>
+
+      {/* Centering shell */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none' }}
+        className="sm:items-center"
+      >
         <div
           onClick={e => e.stopPropagation()}
           style={{
-            pointerEvents: 'auto', width: '100%', maxWidth: '36rem',
-            borderRadius: '1.25rem', overflow: 'hidden',
-            background: '#fff', boxShadow: '0 24px 60px rgba(109,40,217,0.25)',
-            display: 'flex', flexDirection: 'column', maxHeight: '90vh',
+            pointerEvents: 'auto',
+            width: '100%',
+            background: '#fff',
+            boxShadow: '0 -8px 40px rgba(109,40,217,0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '92vh',
           }}
+          className="sm:max-w-xl sm:rounded-2xl sm:shadow-2xl sm:mb-0"
+          // On mobile: full-width sheet from bottom. On sm+: centered card
         >
+          {/* Drag handle (mobile only) */}
+          <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+            <div style={{ width: '2.5rem', height: '0.25rem', borderRadius: '9999px', background: 'rgba(0,0,0,0.15)' }} />
+          </div>
+
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid rgba(124,58,237,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1.25rem', borderBottom: '1px solid rgba(124,58,237,0.1)', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Send style={{ width: '0.9rem', height: '0.9rem', color: '#fff' }} />
+                <Send style={{ width: '0.875rem', height: '0.875rem', color: '#fff' }} />
               </div>
               <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1035' }}>Отправить в Telegram</span>
             </div>
-            <button onClick={onClose} style={{ cursor: 'pointer', color: '#9d8ec4', background: 'none', border: 'none', padding: '0.25rem', display: 'flex' }}>
+            <button onClick={onClose} style={{ cursor: 'pointer', color: '#9d8ec4', background: 'none', border: 'none', padding: '0.25rem', display: 'flex', touchAction: 'manipulation' }}>
               <X style={{ width: '1.1rem', height: '1.1rem' }} />
             </button>
           </div>
 
-          <div style={{ overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Scrollable body */}
+          <div style={{ overflowY: 'auto', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.875rem', flex: 1 }}>
+
             {/* Format tabs */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {(['telegram', 'instagram'] as const).map(f => (
                 <button key={f} onClick={() => switchFormat(f)}
                   style={{
-                    flex: 1, padding: '0.4rem 0', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', border: 'none',
+                    flex: 1, padding: '0.5rem 0', borderRadius: '0.75rem',
+                    fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', border: 'none',
                     background: format === f ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'rgba(124,58,237,0.07)',
                     color: format === f ? '#fff' : '#6b5b95',
+                    touchAction: 'manipulation',
                   }}
                 >
                   {f === 'telegram' ? '📱 Telegram' : '📸 Instagram'}
@@ -180,58 +206,85 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
               ))}
             </div>
 
-            {/* Textarea */}
-            <div style={{ position: 'relative' }}>
+            {/* Textarea + emoji */}
+            <div style={{ position: 'relative' }} data-emoji-picker>
               <textarea
                 ref={textareaRef}
                 value={text}
                 onChange={e => setText(e.target.value)}
-                rows={10}
+                rows={7}
                 placeholder="Текст поста..."
                 style={{
-                  width: '100%', borderRadius: '0.875rem', padding: '0.875rem', paddingBottom: '2.75rem',
-                  fontSize: '0.875rem', lineHeight: 1.6, resize: 'vertical', outline: 'none',
-                  border: '1px solid rgba(124,58,237,0.2)', background: 'rgba(124,58,237,0.02)',
-                  color: '#1a1035', fontFamily: 'inherit', boxSizing: 'border-box',
+                  width: '100%', borderRadius: '0.875rem',
+                  padding: '0.875rem', paddingBottom: '3rem',
+                  fontSize: '0.875rem', lineHeight: 1.6,
+                  resize: 'none', outline: 'none',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  background: 'rgba(124,58,237,0.02)',
+                  color: '#1a1035', fontFamily: 'inherit',
+                  boxSizing: 'border-box', WebkitAppearance: 'none',
                 }}
               />
-              {/* Emoji trigger */}
+
+              {/* Emoji toggle button */}
               <button
                 type="button"
+                data-emoji-picker
                 onClick={() => setEmojiOpen(o => !o)}
                 style={{
-                  position: 'absolute', bottom: '0.625rem', right: '0.625rem',
-                  background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)',
-                  borderRadius: '0.5rem', padding: '0.3rem 0.5rem', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600,
+                  position: 'absolute', bottom: '0.625rem', left: '0.625rem',
+                  background: emojiOpen ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.08)',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  borderRadius: '0.5rem', padding: '0.35rem 0.6rem', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600,
+                  touchAction: 'manipulation',
                 }}
               >
-                <Smile style={{ width: '0.9rem', height: '0.9rem' }} /> Эмодзи
+                <Smile style={{ width: '0.875rem', height: '0.875rem' }} /> Эмодзи
               </button>
 
-              {/* Emoji picker */}
+              {/* Char count */}
+              <span style={{
+                position: 'absolute', bottom: '0.75rem', right: '0.75rem',
+                fontSize: '0.7rem', color: text.length > 4000 ? '#ef4444' : '#9d8ec4',
+              }}>
+                {text.length}
+              </span>
+
+              {/* Emoji picker — opens ABOVE button, left-aligned */}
               {emojiOpen && (
-                <div style={{
-                  position: 'absolute', bottom: '2.75rem', right: 0, zIndex: 10,
-                  background: '#fff', borderRadius: '1rem', padding: '0.875rem',
-                  border: '1px solid rgba(124,58,237,0.15)', boxShadow: '0 12px 40px rgba(109,40,217,0.18)',
-                  width: '17rem',
-                }}>
+                <div
+                  data-emoji-picker
+                  style={{
+                    position: 'absolute', bottom: '2.75rem', left: 0, zIndex: 20,
+                    background: '#fff', borderRadius: '1rem', padding: '0.875rem',
+                    border: '1px solid rgba(124,58,237,0.15)',
+                    boxShadow: '0 12px 40px rgba(109,40,217,0.18)',
+                    width: 'min(17rem, calc(100% - 0px))',
+                  }}
+                >
                   {EMOJI_GROUPS.map(group => (
                     <div key={group.label} style={{ marginBottom: '0.5rem' }}>
-                      <p style={{ fontSize: '0.65rem', fontWeight: 700, color: '#9d8ec4', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>{group.label}</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem' }}>
+                      <p style={{ fontSize: '0.62rem', fontWeight: 700, color: '#9d8ec4', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>
+                        {group.label}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.1rem' }}>
                         {group.emojis.map(emoji => (
-                          <button key={emoji} onClick={() => insertEmoji(emoji)}
+                          <button
+                            key={emoji}
+                            data-emoji-picker
+                            onClick={() => insertEmoji(emoji)}
                             style={{
-                              width: '2rem', height: '2rem', fontSize: '1.1rem', cursor: 'pointer',
-                              background: 'none', border: 'none', borderRadius: '0.375rem',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'background 0.1s',
+                              width: '2.25rem', height: '2.25rem', fontSize: '1.2rem',
+                              cursor: 'pointer', background: 'none', border: 'none',
+                              borderRadius: '0.375rem', display: 'flex',
+                              alignItems: 'center', justifyContent: 'center',
+                              touchAction: 'manipulation',
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.08)')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                          >{emoji}</button>
+                          >
+                            {emoji}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -243,37 +296,33 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
             {/* Media upload */}
             <div>
               <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#6b5b95', marginBottom: '0.5rem' }}>
-                Прикрепить медиа <span style={{ fontWeight: 400, color: '#9d8ec4' }}>(фото до 5 МБ · видео до 50 МБ)</span>
+                Медиафайл{' '}
+                <span style={{ fontWeight: 400, color: '#9d8ec4' }}>фото до 5 МБ · видео до 50 МБ</span>
               </p>
 
               {!mediaFile ? (
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*'; fileInputRef.current.click() } }}
-                    style={{
-                      flex: 1, padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer',
-                      border: '1.5px dashed rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.03)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                      fontSize: '0.8rem', fontWeight: 600, color: '#7c3aed',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.07)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.03)')}
-                  >
-                    <ImageIcon style={{ width: '1rem', height: '1rem' }} /> Фото
-                  </button>
-                  <button
-                    onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'video/*'; fileInputRef.current.click() } }}
-                    style={{
-                      flex: 1, padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer',
-                      border: '1.5px dashed rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.03)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                      fontSize: '0.8rem', fontWeight: 600, color: '#7c3aed',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.07)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.03)')}
-                  >
-                    <Video style={{ width: '1rem', height: '1rem' }} /> Видео
-                  </button>
+                  {[
+                    { accept: 'image/*', icon: <ImageIcon style={{ width: '1rem', height: '1rem' }} />, label: 'Фото' },
+                    { accept: 'video/*', icon: <Video style={{ width: '1rem', height: '1rem' }} />, label: 'Видео' },
+                  ].map(({ accept, icon, label }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        if (!fileInputRef.current) return
+                        fileInputRef.current.accept = accept
+                        fileInputRef.current.click()
+                      }}
+                      style={{
+                        flex: 1, padding: '0.75rem 0.5rem', borderRadius: '0.875rem', cursor: 'pointer',
+                        border: '1.5px dashed rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.03)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+                        fontSize: '0.8rem', fontWeight: 600, color: '#7c3aed', touchAction: 'manipulation',
+                      }}
+                    >
+                      {icon}{label}
+                    </button>
+                  ))}
                   <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileChange} />
                 </div>
               ) : (
@@ -282,7 +331,7 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
                   padding: '0.75rem', borderRadius: '0.875rem',
                   background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.15)',
                 }}>
-                  {mediaPreview && !isVideo ? (
+                  {mediaPreview && !isVideoFile ? (
                     <img src={mediaPreview} alt="" style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.5rem', objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.5rem', background: 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -290,10 +339,14 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
                     </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1035', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mediaFile.name}</p>
-                    <p style={{ fontSize: '0.72rem', color: '#9d8ec4' }}>{(mediaFile.size / 1024 / 1024).toFixed(1)} МБ</p>
+                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1035', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {mediaFile.name}
+                    </p>
+                    <p style={{ fontSize: '0.72rem', color: '#9d8ec4' }}>
+                      {(mediaFile.size / 1024 / 1024).toFixed(1)} МБ
+                    </p>
                   </div>
-                  <button onClick={removeMedia} style={{ cursor: 'pointer', color: '#ef4444', background: 'none', border: 'none', padding: '0.25rem', display: 'flex' }}>
+                  <button onClick={removeMedia} style={{ cursor: 'pointer', color: '#ef4444', background: 'none', border: 'none', padding: '0.25rem', display: 'flex', touchAction: 'manipulation' }}>
                     <Trash2 style={{ width: '1rem', height: '1rem' }} />
                   </button>
                 </div>
@@ -302,12 +355,14 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid rgba(124,58,237,0.1)', display: 'flex', gap: '0.75rem' }}>
+          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid rgba(124,58,237,0.1)', display: 'flex', gap: '0.625rem', flexShrink: 0 }}
+            className="pb-safe"
+          >
             <Button
               onClick={onClose}
               variant="outline"
               className="cursor-pointer"
-              style={{ borderColor: 'rgba(124,58,237,0.2)', color: '#6b5b95' }}
+              style={{ borderColor: 'rgba(124,58,237,0.2)', color: '#6b5b95', touchAction: 'manipulation' }}
             >
               Отмена
             </Button>
@@ -315,12 +370,10 @@ export function TelegramEditorModal({ gen, onClose }: { gen: Generation; onClose
               onClick={send}
               disabled={sending}
               className="flex-1 cursor-pointer border-0 text-white font-bold gap-2"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', boxShadow: '0 4px 16px rgba(99,102,241,0.3)' }}
+              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', boxShadow: '0 4px 16px rgba(99,102,241,0.25)', touchAction: 'manipulation' }}
             >
-              {sending
-                ? 'Отправляю...'
-                : <><Send style={{ width: '1rem', height: '1rem' }} /> Отправить в Telegram</>
-              }
+              <Send style={{ width: '1rem', height: '1rem' }} />
+              {sending ? 'Отправляю...' : 'Отправить'}
             </Button>
           </div>
         </div>

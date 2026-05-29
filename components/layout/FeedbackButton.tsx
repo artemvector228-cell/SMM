@@ -52,12 +52,14 @@ export function FeedbackButton() {
       {/* Modal */}
       {open && (
         <div
-          className="fixed bottom-36 right-4 md:bottom-20 z-40 w-80 rounded-2xl shadow-2xl p-4 space-y-3"
+          className="fixed bottom-36 right-4 md:bottom-20 z-40 rounded-2xl shadow-2xl p-4 space-y-3"
           style={{
+            width: 'min(20rem, calc(100vw - 2rem))',
             background: 'rgba(255,255,255,0.98)',
             border: '1px solid rgba(124,58,237,0.15)',
             boxShadow: '0 20px 60px rgba(109,40,217,0.2)',
             backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
           }}
         >
           <div className="flex items-center justify-between">
