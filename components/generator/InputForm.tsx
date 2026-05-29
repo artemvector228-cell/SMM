@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Zap, Brain, ArrowRight } from 'lucide-react'
+import { Loader2, Zap, Brain, ArrowRight, RefreshCw, X } from 'lucide-react'
 import { GenerateInput } from '@/lib/validations'
 import { toast } from 'sonner'
 import { useGeneratorStore } from '@/store/useGeneratorStore'
@@ -50,15 +50,27 @@ export function InputForm() {
 
   function loadFromKb() {
     if (!kb) return
+    const fresh: KnowledgeBase | null = (() => {
+      try { const s = localStorage.getItem('knowledge_base'); return s ? JSON.parse(s) : null } catch { return null }
+    })()
+    const source = fresh ?? kb
+    setKb(source)
     setForm(f => ({
       ...f,
-      niche: kb.product || f.niche,
-      offer: kb.usp || f.offer,
-      audience: kb.audience || f.audience,
-      pain_points: kb.pains || f.pain_points,
+      niche: source.product || f.niche,
+      offer: source.usp || f.offer,
+      audience: source.audience || f.audience,
+      pain_points: source.pains || f.pain_points,
     }))
     setKbLoaded(true)
-    toast.success('Данные из базы знаний загружены')
+    toast.success('Данные из базы знаний обновлены')
+  }
+
+  function detachKb() {
+    setKb(null)
+    setKbLoaded(false)
+    setForm(f => ({ ...f, niche: '', offer: '', audience: '', pain_points: '' }))
+    toast.success('База знаний отключена')
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -115,15 +127,24 @@ export function InputForm() {
             <p className="text-xs font-semibold" style={{ color: '#1a1035' }}>База знаний подключена</p>
             <p className="text-xs truncate" style={{ color: '#9d8ec4' }}>{kb.product}</p>
           </div>
-          {!kbLoaded && (
+          <div className="flex items-center gap-1 shrink-0">
             <Button type="button" size="sm" variant="outline" onClick={loadFromKb}
-              className="text-xs h-7 cursor-pointer shrink-0 font-semibold"
+              className="text-xs h-7 cursor-pointer font-semibold gap-1 px-2"
               style={{ borderColor: 'rgba(124,58,237,0.3)', color: '#7c3aed' }}
+              title="Обновить данные из базы знаний"
             >
-              Загрузить
+              <RefreshCw className="w-3 h-3" />
+              {kbLoaded ? 'Обновить' : 'Загрузить'}
             </Button>
-          )}
-          {kbLoaded && <span className="text-xs font-semibold" style={{ color: '#7c3aed' }}>✓ Загружено</span>}
+            <button type="button" onClick={detachKb} title="Отключить базу знаний"
+              className="p-1 rounded-lg cursor-pointer transition-colors"
+              style={{ color: '#9d8ec4' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#9d8ec4')}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex items-center justify-between p-3 rounded-xl border border-dashed" style={{ borderColor: 'rgba(124,58,237,0.2)' }}>

@@ -1,8 +1,20 @@
 const YOOKASSA_BASE = 'https://api.yookassa.ru/v3'
 
+function getRequiredEnv(name: 'YOOKASSA_SHOP_ID' | 'YOOKASSA_SECRET_KEY'): string {
+  const value = process.env[name]?.trim()
+
+  if (!value) {
+    throw new Error(
+      `Missing required env var ${name}. Add it in Vercel Project Settings -> Environment Variables.`
+    )
+  }
+
+  return value
+}
+
 function authHeader(): string {
-  const shopId = process.env.YOOKASSA_SHOP_ID!
-  const secretKey = process.env.YOOKASSA_SECRET_KEY!
+  const shopId = getRequiredEnv('YOOKASSA_SHOP_ID')
+  const secretKey = getRequiredEnv('YOOKASSA_SECRET_KEY')
   return 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64')
 }
 

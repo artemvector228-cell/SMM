@@ -2,6 +2,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { FeedbackButton } from '@/components/layout/FeedbackButton'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
       <BottomNav />
+      <FeedbackButton />
     </div>
   )
 }

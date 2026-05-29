@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Send, CheckCircle, ExternalLink } from 'lucide-react'
+import { Send, CheckCircle, ExternalLink, Info } from 'lucide-react'
 import { toast } from 'sonner'
 
 const cardStyle = {
@@ -20,18 +20,48 @@ export function TelegramSettings() {
   const [chatId, setChatId] = useState('')
   const [saved, setSaved] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    // Load from localStorage first (fast), then sync from server
     setBotToken(localStorage.getItem('tg_bot_token') ?? '')
     setChatId(localStorage.getItem('tg_chat_id') ?? '')
+
+    fetch('/api/settings/telegram')
+      .then(r => r.json())
+      .then(data => {
+        if (data.bot_token) { setBotToken(data.bot_token); localStorage.setItem('tg_bot_token', data.bot_token) }
+        if (data.chat_id) { setChatId(data.chat_id); localStorage.setItem('tg_chat_id', data.chat_id) }
+      })
+      .catch(() => { /* fallback to localStorage */ })
   }, [])
 
-  function save() {
-    localStorage.setItem('tg_bot_token', botToken.trim())
-    localStorage.setItem('tg_chat_id', chatId.trim())
-    setSaved(true)
-    toast.success('Настройки Telegram сохранены')
-    setTimeout(() => setSaved(false), 2000)
+  async function save() {
+    setSaving(true)
+    try {
+      // Save to localStorage (for immediate use)
+      localStorage.setItem('tg_bot_token', botToken.trim())
+      localStorage.setItem('tg_chat_id', chatId.trim())
+
+      // Save to server (for scheduled auto-posting)
+      const res = await fetch('/api/settings/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bot_token: botToken.trim(), chat_id: chatId.trim() }),
+      })
+      if (!res.ok) throw new Error()
+
+      setSaved(true)
+      toast.success('Настройки Telegram сохранены')
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      // Even if server save fails, localStorage is set
+      toast.success('Настройки сохранены локально')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function testConnection() {
@@ -105,12 +135,13 @@ export function TelegramSettings() {
       <div className="flex gap-2">
         <Button
           onClick={save}
+          disabled={saving}
           size="sm"
           className="cursor-pointer border-0 text-white font-semibold flex items-center gap-2"
           style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}
         >
           {saved ? <CheckCircle className="w-3.5 h-3.5" /> : null}
-          {saved ? 'Сохранено' : 'Сохранить'}
+          {saved ? 'Сохранено' : saving ? 'Сохраняю...' : 'Сохранить'}
         </Button>
         <Button
           onClick={testConnection}
@@ -122,6 +153,14 @@ export function TelegramSettings() {
         >
           {testing ? 'Проверяю...' : 'Тест подключения'}
         </Button>
+      </div>
+
+      <div className="flex items-start gap-2 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: '#6366f1' }} />
+        <p className="text-xs leading-relaxed" style={{ color: '#4c3d75' }}>
+          После сохранения запланированные посты будут отправляться автоматически.
+          Бот должен быть администратором канала с правом публикации сообщений.
+        </p>
       </div>
     </div>
   )

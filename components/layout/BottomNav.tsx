@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Zap, Library, CalendarRange, Settings } from 'lucide-react'
+import { LayoutDashboard, Zap, Library, CalendarDays, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tabs = [
   { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
   { href: '/generate', label: 'Генератор', icon: Zap },
-  { href: '/content-plan', label: 'План', icon: CalendarRange },
+  { href: '/schedule', label: 'Календарь', icon: CalendarDays },
   { href: '/library', label: 'Библиотека', icon: Library },
   { href: '/settings', label: 'Настройки', icon: Settings },
 ]

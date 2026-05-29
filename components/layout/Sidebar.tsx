@@ -17,12 +17,12 @@ const nav = [
   { href: '/settings', label: 'Настройки', icon: Settings },
 ]
 
-export function Sidebar() {
+export function Sidebar({ forceVisible }: { forceVisible?: boolean } = {}) {
   const pathname = usePathname()
 
   return (
     <aside
-      className="hidden md:flex flex-col w-60 min-h-screen p-4 shrink-0 border-r"
+      className={forceVisible ? 'flex flex-col w-60 min-h-screen p-4 shrink-0 border-r' : 'hidden md:flex flex-col w-60 min-h-screen p-4 shrink-0 border-r'}
       style={{
         background: 'rgba(255,255,255,0.65)',
         backdropFilter: 'blur(20px)',

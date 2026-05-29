@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Calendar, Clock, CalendarDays } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Clock, CalendarDays, Send } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
-  getDay, isSameDay, addMonths, subMonths, isToday,
+  getDay, isSameDay, addMonths, subMonths, isToday, isPast,
 } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 interface ScheduledPost {
   id: string
@@ -26,11 +27,30 @@ const cardStyle = {
   borderRadius: '1rem',
 }
 
+async function publishToTelegram(post: ScheduledPost) {
+  const botToken = localStorage.getItem('tg_bot_token')
+  const chatId = localStorage.getItem('tg_chat_id')
+  if (!botToken || !chatId) {
+    toast.error('Настройте Telegram-бот в разделе Настройки')
+    return false
+  }
+  const res = await fetch('/api/telegram/publish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ generation_id: post.id, bot_token: botToken, chat_id: chatId, format: 'telegram' }),
+  })
+  const data = await res.json()
+  if (data.success) { toast.success('Пост отправлен в Telegram!'); return true }
+  toast.error(data.error ?? 'Ошибка отправки')
+  return false
+}
+
 export default function SchedulePage() {
   const [month, setMonth] = useState(new Date())
   const [posts, setPosts] = useState<ScheduledPost[]>([])
   const [selected, setSelected] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
+  const [publishing, setPublishing] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPosts()
@@ -178,9 +198,27 @@ export default function SchedulePage() {
                         className="rounded-xl p-3 space-y-2"
                         style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}
                       >
-                        <div className="flex items-center gap-1 text-xs" style={{ color: '#9d8ec4' }}>
-                          <Clock className="w-3 h-3" />
-                          {format(new Date(post.scheduled_at), 'HH:mm')}
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1 text-xs" style={{ color: '#9d8ec4' }}>
+                            <Clock className="w-3 h-3" />
+                            {format(new Date(post.scheduled_at), 'HH:mm')}
+                          </div>
+                          {isPast(new Date(post.scheduled_at)) && (
+                            <Button
+                              size="sm"
+                              disabled={publishing === post.id}
+                              onClick={async () => {
+                                setPublishing(post.id)
+                                await publishToTelegram(post)
+                                setPublishing(null)
+                              }}
+                              className="h-6 text-xs gap-1 cursor-pointer border-0 text-white font-semibold px-2"
+                              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
+                            >
+                              <Send className="w-2.5 h-2.5" />
+                              {publishing === post.id ? '...' : 'Отправить'}
+                            </Button>
+                          )}
                         </div>
                         <p className="text-sm font-bold" style={{ color: '#1a1035' }}>{post.input_json.niche}</p>
                         <p className="text-xs line-clamp-2" style={{ color: '#9d8ec4' }}>
@@ -188,9 +226,11 @@ export default function SchedulePage() {
                         </p>
                         <Badge
                           className="border text-xs font-semibold"
-                          style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', borderColor: 'rgba(124,58,237,0.2)' }}
+                          style={isPast(new Date(post.scheduled_at))
+                            ? { background: 'rgba(245,158,11,0.1)', color: '#d97706', borderColor: 'rgba(245,158,11,0.25)' }
+                            : { background: 'rgba(124,58,237,0.08)', color: '#7c3aed', borderColor: 'rgba(124,58,237,0.2)' }}
                         >
-                          Запланировано
+                          {isPast(new Date(post.scheduled_at)) ? 'Ожидает отправки' : 'Запланировано'}
                         </Badge>
                       </div>
                     ))}

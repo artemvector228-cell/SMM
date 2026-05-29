@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment Variables
+
+`.env.local` is used only for local development.
+For production on Vercel, add variables in Project Settings -> Environment Variables.
+
+Required for YooKassa flow:
+
+- `YOOKASSA_SHOP_ID`
+- `YOOKASSA_SECRET_KEY`
+- `NEXT_PUBLIC_APP_URL`
+
+Also required by API routes:
+
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAI_API_KEY`
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

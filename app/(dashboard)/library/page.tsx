@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Trash2, RefreshCw, Library, ChevronLeft, ChevronRight, Send, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Star } from 'lucide-react'
+import { Trash2, RefreshCw, Library, ChevronLeft, ChevronRight, Send, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Star, Camera, Copy, Check, X } from 'lucide-react'
 import { StarButton } from '@/app/(dashboard)/templates/page'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
@@ -92,6 +92,74 @@ function TelegramButton({ genId }: { genId: string }) {
   )
 }
 
+function InstagramModal({ gen, onClose }: { gen: Generation; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const ig = gen.output_json?.instagram_post
+  if (!ig) return null
+
+  const text = [
+    ig.hook,
+    ig.pain_agitation,
+    ig.value_body,
+    ig.cta,
+    ig.hashtags?.map((h: string) => `#${h}`).join(' '),
+  ].filter(Boolean).join('\n\n')
+
+  function copy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl p-5 space-y-4 max-h-[80vh] overflow-y-auto"
+        style={{ background: 'rgba(255,255,255,0.98)', boxShadow: '0 24px 60px rgba(109,40,217,0.2)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)' }}>
+              <Camera className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-sm" style={{ color: '#1a1035' }}>Instagram-пост</span>
+          </div>
+          <button onClick={onClose} className="cursor-pointer p-1 rounded-lg" style={{ color: '#9d8ec4' }}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div
+          className="rounded-xl p-4 text-sm whitespace-pre-wrap leading-relaxed"
+          style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)', color: '#1a1035' }}
+        >
+          {text}
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            onClick={copy}
+            className="flex-1 cursor-pointer border-0 text-white font-semibold gap-2"
+            style={{ background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af)' }}
+          >
+            {copied ? <><Check className="w-4 h-4" /> Скопировано!</> : <><Copy className="w-4 h-4" /> Скопировать текст</>}
+          </Button>
+        </div>
+        <p className="text-xs text-center" style={{ color: '#9d8ec4' }}>
+          Скопируйте текст и вставьте в приложение Instagram при создании публикации
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function HookTracker({ genId, hooks }: { genId: string; hooks: string[] }) {
   const [results, setResults] = useState<Record<number, HookResult>>({})
 
@@ -157,6 +225,7 @@ function GenerationCard({ gen, onDelete, onRewrite }: {
   onRewrite: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [showInstagram, setShowInstagram] = useState(false)
 
   return (
     <div style={cardStyle} className="p-4 space-y-3 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(109,40,217,0.12)]">
@@ -174,9 +243,20 @@ function GenerationCard({ gen, onDelete, onRewrite }: {
           <p className="text-xs mt-1 truncate" style={{ color: '#9d8ec4' }}>{gen.input_json.offer}</p>
           <p className="text-xs mt-0.5" style={{ color: '#9d8ec4' }}>{new Date(gen.created_at).toLocaleDateString('ru-RU')}</p>
         </div>
-        <div className="flex gap-1 shrink-0">
+        <div className="flex gap-1 shrink-0 flex-wrap justify-end">
           <TelegramButton genId={gen.id} />
+          {gen.output_json?.instagram_post && (
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setShowInstagram(true)}
+              className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
+              style={{ borderColor: 'rgba(221,42,123,0.3)', color: '#dd2a7b', background: 'rgba(221,42,123,0.05)' }}
+            >
+              <Camera className="w-3.5 h-3.5" /> Instagram
+            </Button>
+          )}
           <StarButton id={gen.id} />
+          {showInstagram && <InstagramModal gen={gen} onClose={() => setShowInstagram(false)} />}
           <Button
             variant="ghost" size="icon"
             className="h-8 w-8 cursor-pointer"
