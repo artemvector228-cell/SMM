@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -126,52 +125,83 @@ function InstagramModal({ gen, onClose }: { gen: Generation; onClose: () => void
     })
   }
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
+  return (
+    <>
+      {/* Backdrop */}
       <div
-        className="w-full max-w-lg rounded-2xl p-5 space-y-4 max-h-[80vh] overflow-y-auto"
-        style={{ background: 'rgba(255,255,255,0.98)', boxShadow: '0 24px 60px rgba(109,40,217,0.2)' }}
-        onClick={e => e.stopPropagation()}
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+        }}
+      />
+      {/* Modal */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          pointerEvents: 'none',
+        }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)' }}>
-              <Camera className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-sm" style={{ color: '#1a1035' }}>Instagram-пост</span>
-          </div>
-          <button onClick={onClose} className="cursor-pointer p-1 rounded-lg" style={{ color: '#9d8ec4' }}>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
         <div
-          className="rounded-xl p-4 text-sm whitespace-pre-wrap leading-relaxed"
-          style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)', color: '#1a1035' }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            pointerEvents: 'auto',
+            width: '100%',
+            maxWidth: '32rem',
+            borderRadius: '1.25rem',
+            padding: '1.25rem',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            background: '#fff',
+            boxShadow: '0 24px 60px rgba(109,40,217,0.25)',
+          }}
         >
-          {text}
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{
+                width: '1.75rem', height: '1.75rem', borderRadius: '0.5rem',
+                background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Camera style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+              </div>
+              <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a1035' }}>Instagram-пост</span>
+            </div>
+            <button onClick={onClose} style={{ cursor: 'pointer', color: '#9d8ec4', background: 'none', border: 'none', padding: '0.25rem' }}>
+              <X style={{ width: '1rem', height: '1rem' }} />
+            </button>
+          </div>
 
-        <div className="flex gap-2">
+          <div style={{
+            borderRadius: '0.75rem', padding: '1rem',
+            fontSize: '0.875rem', whiteSpace: 'pre-wrap', lineHeight: 1.6,
+            background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)', color: '#1a1035',
+            marginBottom: '1rem',
+          }}>
+            {text}
+          </div>
+
           <Button
             onClick={copy}
-            className="flex-1 cursor-pointer border-0 text-white font-semibold gap-2"
+            className="w-full cursor-pointer border-0 text-white font-semibold gap-2"
             style={{ background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af)' }}
           >
             {copied ? <><Check className="w-4 h-4" /> Скопировано!</> : <><Copy className="w-4 h-4" /> Скопировать текст</>}
           </Button>
+          <p style={{ fontSize: '0.75rem', textAlign: 'center', color: '#9d8ec4', marginTop: '0.75rem' }}>
+            Скопируйте текст и вставьте в приложение Instagram при создании публикации
+          </p>
         </div>
-        <p className="text-xs text-center" style={{ color: '#9d8ec4' }}>
-          Скопируйте текст и вставьте в приложение Instagram при создании публикации
-        </p>
       </div>
-    </div>,
-    document.body
+    </>
   )
 }
 
