@@ -276,39 +276,42 @@ function GenerationCard({ gen, onDelete, onRewrite, onInstagram, onTelegram }: {
 
   return (
     <div style={cardStyle} className="p-4 space-y-3 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(109,40,217,0.12)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-bold text-sm" style={{ color: '#1a1035' }}>{gen.input_json.niche}</p>
-            <Badge className="border text-xs font-semibold" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', borderColor: 'rgba(124,58,237,0.2)' }}>
-              {GOAL_LABELS[gen.input_json.conversion_goal] ?? gen.input_json.conversion_goal}
-            </Badge>
-            <Badge className="border text-xs" style={{ background: 'rgba(124,58,237,0.04)', color: '#9d8ec4', borderColor: 'rgba(124,58,237,0.12)' }}>
-              {TONE_LABELS[gen.input_json.tone] ?? gen.input_json.tone}
-            </Badge>
-          </div>
-          <p className="text-xs mt-1 truncate" style={{ color: '#9d8ec4' }}>{gen.input_json.offer}</p>
-          <p className="text-xs mt-0.5" style={{ color: '#9d8ec4' }}>{new Date(gen.created_at).toLocaleDateString('ru-RU')}</p>
+      {/* Info row — always full width */}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-bold text-sm" style={{ color: '#1a1035' }}>{gen.input_json.niche}</p>
+          <Badge className="border text-xs font-semibold" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', borderColor: 'rgba(124,58,237,0.2)' }}>
+            {GOAL_LABELS[gen.input_json.conversion_goal] ?? gen.input_json.conversion_goal}
+          </Badge>
+          <Badge className="border text-xs" style={{ background: 'rgba(124,58,237,0.04)', color: '#9d8ec4', borderColor: 'rgba(124,58,237,0.12)' }}>
+            {TONE_LABELS[gen.input_json.tone] ?? gen.input_json.tone}
+          </Badge>
         </div>
-        <div className="flex gap-1 shrink-0 flex-wrap justify-end">
+        <p className="text-xs mt-1 truncate" style={{ color: '#9d8ec4' }}>{gen.input_json.offer}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#9d8ec4' }}>{new Date(gen.created_at).toLocaleDateString('ru-RU')}</p>
+      </div>
+
+      {/* Actions row — below info, no overlap */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Button
+          variant="outline" size="sm"
+          onClick={() => onTelegram(gen)}
+          className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
+          style={{ borderColor: 'rgba(99,102,241,0.3)', color: '#6366f1', background: 'rgba(99,102,241,0.05)' }}
+        >
+          <Send className="w-3.5 h-3.5" /> Telegram
+        </Button>
+        {gen.output_json?.instagram_post && (
           <Button
             variant="outline" size="sm"
-            onClick={() => onTelegram(gen)}
+            onClick={() => onInstagram(gen)}
             className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
-            style={{ borderColor: 'rgba(99,102,241,0.3)', color: '#6366f1', background: 'rgba(99,102,241,0.05)' }}
+            style={{ borderColor: 'rgba(221,42,123,0.3)', color: '#dd2a7b', background: 'rgba(221,42,123,0.05)' }}
           >
-            <Send className="w-3.5 h-3.5" /> Telegram
+            <Camera className="w-3.5 h-3.5" /> Instagram
           </Button>
-          {gen.output_json?.instagram_post && (
-            <Button
-              variant="outline" size="sm"
-              onClick={() => onInstagram(gen)}
-              className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
-              style={{ borderColor: 'rgba(221,42,123,0.3)', color: '#dd2a7b', background: 'rgba(221,42,123,0.05)' }}
-            >
-              <Camera className="w-3.5 h-3.5" /> Instagram
-            </Button>
-          )}
+        )}
+        <div className="ml-auto flex gap-1">
           <StarButton id={gen.id} />
           <Button
             variant="ghost" size="icon"
