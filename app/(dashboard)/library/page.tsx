@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Generation } from '@/types'
 import { OutputCards } from '@/components/generator/OutputCards'
+import { TelegramEditorModal } from '@/components/library/TelegramEditor'
 
 const cardStyle = {
   background: 'rgba(255,255,255,0.75)',
@@ -264,11 +265,12 @@ function HookTracker({ genId, hooks }: { genId: string; hooks: string[] }) {
   )
 }
 
-function GenerationCard({ gen, onDelete, onRewrite, onInstagram }: {
+function GenerationCard({ gen, onDelete, onRewrite, onInstagram, onTelegram }: {
   gen: Generation
   onDelete: (id: string) => void
   onRewrite: (id: string) => void
   onInstagram: (gen: Generation) => void
+  onTelegram: (gen: Generation) => void
 }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -289,7 +291,14 @@ function GenerationCard({ gen, onDelete, onRewrite, onInstagram }: {
           <p className="text-xs mt-0.5" style={{ color: '#9d8ec4' }}>{new Date(gen.created_at).toLocaleDateString('ru-RU')}</p>
         </div>
         <div className="flex gap-1 shrink-0 flex-wrap justify-end">
-          <TelegramButton genId={gen.id} />
+          <Button
+            variant="outline" size="sm"
+            onClick={() => onTelegram(gen)}
+            className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
+            style={{ borderColor: 'rgba(99,102,241,0.3)', color: '#6366f1', background: 'rgba(99,102,241,0.05)' }}
+          >
+            <Send className="w-3.5 h-3.5" /> Telegram
+          </Button>
           {gen.output_json?.instagram_post && (
             <Button
               variant="outline" size="sm"
@@ -343,6 +352,7 @@ function GenerationCard({ gen, onDelete, onRewrite, onInstagram }: {
 export default function LibraryPage() {
   const [page, setPage] = useState(1)
   const [instagramGen, setInstagramGen] = useState<Generation | null>(null)
+  const [telegramGen, setTelegramGen] = useState<Generation | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -420,12 +430,17 @@ export default function LibraryPage() {
             onDelete={id => deleteMutation.mutate(id)}
             onRewrite={id => rewriteMutation.mutate(id)}
             onInstagram={setInstagramGen}
+            onTelegram={setTelegramGen}
           />
         ))}
       </div>
 
       {instagramGen && (
         <InstagramModal gen={instagramGen} onClose={() => setInstagramGen(null)} />
+      )}
+
+      {telegramGen && (
+        <TelegramEditorModal gen={telegramGen} onClose={() => setTelegramGen(null)} />
       )}
 
       {data?.totalPages > 1 && (
