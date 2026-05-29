@@ -27,9 +27,22 @@ const cardStyle = {
   borderRadius: '1rem',
 }
 
+async function getTgCredentials() {
+  let botToken = localStorage.getItem('tg_bot_token')
+  let chatId = localStorage.getItem('tg_chat_id')
+  if (!botToken || !chatId) {
+    try {
+      const r = await fetch('/api/settings/telegram')
+      const d = await r.json()
+      if (d.bot_token) { botToken = d.bot_token; localStorage.setItem('tg_bot_token', d.bot_token) }
+      if (d.chat_id) { chatId = d.chat_id; localStorage.setItem('tg_chat_id', d.chat_id) }
+    } catch { /* ignore */ }
+  }
+  return { botToken, chatId }
+}
+
 async function publishToTelegram(post: ScheduledPost) {
-  const botToken = localStorage.getItem('tg_bot_token')
-  const chatId = localStorage.getItem('tg_chat_id')
+  const { botToken, chatId } = await getTgCredentials()
   if (!botToken || !chatId) {
     toast.error('Настройте Telegram-бот в разделе Настройки')
     return false

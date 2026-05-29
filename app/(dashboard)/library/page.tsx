@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -28,9 +29,22 @@ function TelegramButton({ genId }: { genId: string }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  async function getTgCredentials() {
+    let botToken = localStorage.getItem('tg_bot_token')
+    let chatId = localStorage.getItem('tg_chat_id')
+    if (!botToken || !chatId) {
+      try {
+        const r = await fetch('/api/settings/telegram')
+        const d = await r.json()
+        if (d.bot_token) { botToken = d.bot_token; localStorage.setItem('tg_bot_token', d.bot_token) }
+        if (d.chat_id) { chatId = d.chat_id; localStorage.setItem('tg_chat_id', d.chat_id) }
+      } catch { /* ignore */ }
+    }
+    return { botToken, chatId }
+  }
+
   async function publish(format: string) {
-    const botToken = localStorage.getItem('tg_bot_token')
-    const chatId = localStorage.getItem('tg_chat_id')
+    const { botToken, chatId } = await getTgCredentials()
     if (!botToken || !chatId) {
       toast.error('Настройте Telegram в разделе Настройки')
       return
@@ -112,9 +126,9 @@ function InstagramModal({ gen, onClose }: { gen: Generation; onClose: () => void
     })
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
@@ -156,7 +170,8 @@ function InstagramModal({ gen, onClose }: { gen: Generation; onClose: () => void
           Скопируйте текст и вставьте в приложение Instagram при создании публикации
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -219,13 +234,13 @@ function HookTracker({ genId, hooks }: { genId: string; hooks: string[] }) {
   )
 }
 
-function GenerationCard({ gen, onDelete, onRewrite }: {
+function GenerationCard({ gen, onDelete, onRewrite, onInstagram }: {
   gen: Generation
   onDelete: (id: string) => void
   onRewrite: (id: string) => void
+  onInstagram: (gen: Generation) => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const [showInstagram, setShowInstagram] = useState(false)
 
   return (
     <div style={cardStyle} className="p-4 space-y-3 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(109,40,217,0.12)]">
@@ -248,7 +263,7 @@ function GenerationCard({ gen, onDelete, onRewrite }: {
           {gen.output_json?.instagram_post && (
             <Button
               variant="outline" size="sm"
-              onClick={() => setShowInstagram(true)}
+              onClick={() => onInstagram(gen)}
               className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
               style={{ borderColor: 'rgba(221,42,123,0.3)', color: '#dd2a7b', background: 'rgba(221,42,123,0.05)' }}
             >
@@ -256,7 +271,6 @@ function GenerationCard({ gen, onDelete, onRewrite }: {
             </Button>
           )}
           <StarButton id={gen.id} />
-          {showInstagram && <InstagramModal gen={gen} onClose={() => setShowInstagram(false)} />}
           <Button
             variant="ghost" size="icon"
             className="h-8 w-8 cursor-pointer"
@@ -298,6 +312,7 @@ function GenerationCard({ gen, onDelete, onRewrite }: {
 
 export default function LibraryPage() {
   const [page, setPage] = useState(1)
+  const [instagramGen, setInstagramGen] = useState<Generation | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -374,9 +389,14 @@ export default function LibraryPage() {
             gen={gen}
             onDelete={id => deleteMutation.mutate(id)}
             onRewrite={id => rewriteMutation.mutate(id)}
+            onInstagram={setInstagramGen}
           />
         ))}
       </div>
+
+      {instagramGen && (
+        <InstagramModal gen={instagramGen} onClose={() => setInstagramGen(null)} />
+      )}
 
       {data?.totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
