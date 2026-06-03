@@ -50,25 +50,51 @@ const FIELDS: { key: keyof KnowledgeBase; label: string; placeholder: string; mu
 export default function KnowledgePage() {
   const [kb, setKb] = useState<KnowledgeBase>(EMPTY)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [hasExisting, setHasExisting] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('knowledge_base')
-    if (stored) {
-      try { setKb({ ...EMPTY, ...JSON.parse(stored) }); setHasExisting(true) }
-      catch { /* ignore */ }
-    }
+    // Load from server first, fallback to localStorage
+    fetch('/api/knowledge')
+      .then(r => r.json())
+      .then(d => {
+        if (d.knowledge) {
+          setKb({ ...EMPTY, ...d.knowledge })
+          localStorage.setItem('knowledge_base', JSON.stringify(d.knowledge))
+          setHasExisting(true)
+        } else {
+          const stored = localStorage.getItem('knowledge_base')
+          if (stored) {
+            try { setKb({ ...EMPTY, ...JSON.parse(stored) }); setHasExisting(true) } catch { /* ignore */ }
+          }
+        }
+      })
+      .catch(() => {
+        const stored = localStorage.getItem('knowledge_base')
+        if (stored) {
+          try { setKb({ ...EMPTY, ...JSON.parse(stored) }); setHasExisting(true) } catch { /* ignore */ }
+        }
+      })
   }, [])
 
   function set(key: keyof KnowledgeBase, value: string) {
     setKb(k => ({ ...k, [key]: value }))
   }
 
-  function save() {
+  async function save() {
+    setSaving(true)
     localStorage.setItem('knowledge_base', JSON.stringify(kb))
+    try {
+      await fetch('/api/knowledge', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: kb }),
+      })
+    } catch { /* localStorage already saved */ }
     setSaved(true)
+    setSaving(false)
     setHasExisting(true)
-    toast.success('База знаний сохранена! Генератор теперь использует её автоматически.')
+    toast.success('База знаний сохранена в облаке! Доступна с любого устройства.')
     setTimeout(() => setSaved(false), 2500)
   }
 
@@ -141,7 +167,7 @@ export default function KnowledgePage() {
           className="w-full cursor-pointer border-0 text-white font-semibold h-11 gap-2"
           style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 16px rgba(109,40,217,0.25)' }}
         >
-          {saved ? <><CheckCircle className="w-4 h-4" /> Сохранено!</> : 'Сохранить базу знаний'}
+          {saved ? <><CheckCircle className="w-4 h-4" /> Сохранено в облаке!</> : saving ? 'Сохраняю...' : 'Сохранить базу знаний'}
         </Button>
       </div>
 

@@ -99,7 +99,7 @@ export interface PlanLimit {
 export const PLAN_LIMITS: Record<Plan, PlanLimit> = {
   free: {
     plan: 'free',
-    maxGenerations: 10,
+    maxGenerations: 15,
     label: 'Бесплатно',
     price: '0 ₽',
     priceMonthly: 0,

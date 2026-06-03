@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getPlanLimit } from '@/types'
-import { Zap, Library, TrendingUp, ArrowRight, ShieldCheck, CalendarDays, Target, Sparkles } from 'lucide-react'
+import { Zap, Library, TrendingUp, ArrowRight, ShieldCheck, CalendarDays, Target, Sparkles, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -53,6 +53,11 @@ export default async function DashboardPage() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .not('scheduled_at', 'is', null)
+
+  const { count: conversionsCount } = await supabase
+    .from('conversions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
 
   const plan = profile?.plan ?? 'free'
   const limit = getPlanLimit(plan)
@@ -175,6 +180,25 @@ export default async function DashboardPage() {
           <p className="text-xs mt-1" style={{ color: '#9d8ec4' }}>постов в очереди</p>
         </div>
       </div>
+
+      {/* Conversion counter — hero metric */}
+      {(conversionsCount ?? 0) > 0 && (
+        <div style={{ ...card, background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.05))', border: '1px solid rgba(16,185,129,0.2)' }} className="p-5 flex items-center gap-4 flex-wrap">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 4px 16px rgba(16,185,129,0.35)' }}>
+            <Trophy className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-2xl font-black" style={{ color: '#1a1035' }}>
+              {conversionsCount} {(conversionsCount ?? 0) === 1 ? 'результат' : (conversionsCount ?? 0) < 5 ? 'результата' : 'результатов'}
+            </p>
+            <p className="text-sm" style={{ color: '#059669', fontWeight: 600 }}>
+              получено через контент — лиды, продажи, подписчики
+            </p>
+          </div>
+          <p className="text-xs shrink-0" style={{ color: '#9d8ec4' }}>Отмечайте результаты в Библиотеке</p>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

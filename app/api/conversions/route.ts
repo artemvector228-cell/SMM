@@ -1,0 +1,34 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data, count } = await supabase
+    .from('conversions')
+    .select('*', { count: 'exact' })
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  return NextResponse.json({ conversions: data ?? [], total: count ?? 0 })
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { generation_id, type } = await request.json()
+  if (!generation_id || !type) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+
+  const { error } = await supabase.from('conversions').insert({
+    user_id: user.id,
+    generation_id,
+    type, // 'lead' | 'sale' | 'subscriber'
+  })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

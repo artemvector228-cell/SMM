@@ -4,13 +4,85 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Trash2, RefreshCw, Library, ChevronLeft, ChevronRight, Send, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Star, Camera, Copy, Check, X } from 'lucide-react'
+import { Trash2, RefreshCw, Library, ChevronLeft, ChevronRight, Send, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Star, Camera, Copy, Check, X, TrendingUp } from 'lucide-react'
 import { StarButton } from '@/app/(dashboard)/templates/page'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Generation } from '@/types'
 import { OutputCards } from '@/components/generator/OutputCards'
 import { TelegramEditorModal } from '@/components/library/TelegramEditor'
+import { UpgradeTrigger } from '@/components/upgrade/UpgradeTrigger'
+
+const GRADE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  S: { bg: 'rgba(16,185,129,0.1)', text: '#059669', border: 'rgba(16,185,129,0.25)' },
+  A: { bg: 'rgba(124,58,237,0.1)', text: '#7c3aed', border: 'rgba(124,58,237,0.25)' },
+  B: { bg: 'rgba(245,158,11,0.1)', text: '#d97706', border: 'rgba(245,158,11,0.25)' },
+  C: { bg: 'rgba(239,68,68,0.1)', text: '#dc2626', border: 'rgba(239,68,68,0.25)' },
+}
+
+function ConversionButton({ genId }: { genId: string }) {
+  const [open, setOpen] = useState(false)
+  const [marked, setMarked] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMarked(localStorage.getItem(`conv_${genId}`))
+  }, [genId])
+
+  async function mark(type: 'lead' | 'sale' | 'subscriber') {
+    try {
+      await fetch('/api/conversions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generation_id: genId, type }),
+      })
+      localStorage.setItem(`conv_${genId}`, type)
+      setMarked(type)
+      setOpen(false)
+      toast.success(type === 'lead' ? '🎯 Лид отмечен!' : type === 'sale' ? '💰 Продажа отмечена!' : '📣 Подписчик отмечен!')
+    } catch {
+      toast.error('Не удалось сохранить')
+    }
+  }
+
+  if (marked) {
+    const label = { lead: '🎯 Лид', sale: '💰 Продажа', subscriber: '📣 Подписчик' }[marked]
+    return (
+      <span className="text-xs font-semibold px-2 py-1 rounded-lg"
+        style={{ background: 'rgba(16,185,129,0.1)', color: '#059669', border: '1px solid rgba(16,185,129,0.2)' }}>
+        {label}
+      </span>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <Button variant="outline" size="sm"
+        onClick={() => setOpen(o => !o)}
+        className="cursor-pointer h-8 gap-1.5 font-semibold text-xs"
+        style={{ borderColor: 'rgba(16,185,129,0.3)', color: '#059669', background: 'rgba(16,185,129,0.05)' }}>
+        <TrendingUp className="w-3.5 h-3.5" /> Результат
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-20 rounded-xl border py-1 min-w-36"
+          style={{ background: 'rgba(255,255,255,0.97)', borderColor: 'rgba(16,185,129,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+          {[
+            { type: 'lead' as const, label: '🎯 Получил лид' },
+            { type: 'sale' as const, label: '💰 Закрыл продажу' },
+            { type: 'subscriber' as const, label: '📣 Новый подписчик' },
+          ].map(({ type, label }) => (
+            <button key={type} onClick={() => mark(type)}
+              className="w-full text-left px-3 py-2 text-xs transition-colors cursor-pointer"
+              style={{ color: '#1a1035' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const cardStyle = {
   background: 'rgba(255,255,255,0.75)',
@@ -311,22 +383,25 @@ function GenerationCard({ gen, onDelete, onRewrite, onInstagram, onTelegram }: {
             <Camera className="w-3.5 h-3.5" /> Instagram
           </Button>
         )}
-        <div className="ml-auto flex gap-1">
+        <ConversionButton genId={gen.id} />
+        <div className="ml-auto flex items-center gap-1">
+          {(() => {
+            const grade = gen.output_json?.quality_scores?.instagram?.grade
+            const gc = grade ? GRADE_COLORS[grade] : null
+            return gc && grade ? (
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg border"
+                style={{ background: gc.bg, color: gc.text, borderColor: gc.border }}>
+                {grade}
+              </span>
+            ) : null
+          })()}
           <StarButton id={gen.id} />
-          <Button
-            variant="ghost" size="icon"
-            className="h-8 w-8 cursor-pointer"
-            style={{ color: '#9d8ec4' }}
-            onClick={() => setExpanded(e => !e)}
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" style={{ color: '#9d8ec4' }}
+            onClick={() => setExpanded(e => !e)}>
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </Button>
-          <Button
-            variant="ghost" size="icon"
-            className="h-8 w-8 cursor-pointer"
-            style={{ color: '#ef4444' }}
-            onClick={() => onDelete(gen.id)}
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" style={{ color: '#ef4444' }}
+            onClick={() => onDelete(gen.id)}>
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
@@ -391,6 +466,8 @@ export default function LibraryPage() {
         </h1>
         <p className="text-sm mt-1" style={{ color: '#9d8ec4' }}>Все ваши сохранённые генерации</p>
       </div>
+
+      <UpgradeTrigger />
 
       {isLoading && (
         <div className="space-y-3">
