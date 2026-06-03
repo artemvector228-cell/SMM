@@ -108,10 +108,10 @@ export function LandingHeader() {
             </a>
           ))}
           <div className="flex flex-col gap-2.5 mt-3 pt-3 border-t border-[#E5E4E0]">
-            <Link href="/signup" className="w-full text-center py-3.5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold rounded-2xl transition-colors cursor-pointer">
+            <Link href="/signup" className="w-full text-center py-3.5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold rounded-2xl transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1D4ED8]">
               Начать бесплатно — 15 генераций
             </Link>
-            <Link href="/login" className="w-full text-center py-3 text-sm font-semibold text-[#525252] hover:text-[#141414] transition-colors cursor-pointer">
+            <Link href="/login" className="w-full text-center py-3 text-sm font-semibold text-[#525252] hover:text-[#141414] transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1D4ED8] rounded-md">
               Войти
             </Link>
           </div>

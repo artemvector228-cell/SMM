@@ -3,9 +3,9 @@ import { TrendingUp } from 'lucide-react'
 
 const LINKS = [
   { group: 'Продукт', items: [
-    { label: 'Как работает', href: '#how' },
+    { label: 'Как работает', href: '/#how' },
     { label: 'Тарифы', href: '/pricing' },
-    { label: 'FAQ', href: '#faq' },
+    { label: 'FAQ', href: '/#faq' },
   ]},
   { group: 'Аккаунт', items: [
     { label: 'Войти', href: '/login' },

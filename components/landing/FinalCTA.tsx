@@ -3,13 +3,9 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 const ease = [0.22, 1, 0.36, 1] as const
-
-const BADGES = [
-  { icon: ShieldCheck, text: 'Безопасная оплата СБП', color: '#6EE7B7' },
-]
 
 const GUARANTEES = [
   'Карта не нужна',

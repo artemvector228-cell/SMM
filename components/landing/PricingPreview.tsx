@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { Check, ArrowRight, Loader2 } from 'lucide-react'
+import { Check, ArrowRight, Loader2, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
@@ -219,10 +219,10 @@ export function PricingPreview() {
                       : { background: '#F4F3F0', color: '#141414', border: '1px solid #E5E4E0' }
                   }
                 >
+                  {plan.cta}
                   {loading === plan.key
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
-                  {plan.cta}
                 </button>
               )}
             </motion.div>
@@ -236,7 +236,8 @@ export function PricingPreview() {
           transition={{ delay: 0.5 }}
           className="text-center text-sm text-[#8A8A8A]"
         >
-          🔒 Безопасная оплата СБП и картой · Отмена в любой момент · Мгновенная активация
+          <Lock className="w-3.5 h-3.5 inline-block mr-1.5 -mt-px" strokeWidth={2.5} />
+          Безопасная оплата СБП и картой · Отмена в любой момент · Мгновенная активация
         </motion.p>
       </div>
     </section>
