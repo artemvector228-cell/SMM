@@ -85,7 +85,7 @@ export function PricingPreview() {
   }
 
   return (
-    <section id="pricing" ref={ref} aria-label="Тарифы" className="bg-[#FAFAF8] py-20 sm:py-28 lg:py-36">
+    <section id="pricing" ref={ref} aria-label="Тарифы" className="bg-white py-16 sm:py-20 lg:py-28">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
 
         {/* Heading */}

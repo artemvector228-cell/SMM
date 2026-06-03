@@ -4,6 +4,7 @@ import { ProofStrip } from '@/components/landing/ProofStrip'
 import { ProductWalkthrough } from '@/components/landing/ProductWalkthrough'
 import { Results } from '@/components/landing/Results'
 import { Features } from '@/components/landing/Features'
+import { Testimonials } from '@/components/landing/Testimonials'
 import { PricingPreview } from '@/components/landing/PricingPreview'
 import { FAQ } from '@/components/landing/FAQ'
 import { FinalCTA } from '@/components/landing/FinalCTA'
@@ -19,6 +20,7 @@ export default function LandingPage() {
         <ProductWalkthrough />
         <Results />
         <Features />
+        <Testimonials />
         <PricingPreview />
         <FAQ />
         <FinalCTA />
