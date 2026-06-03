@@ -5,10 +5,16 @@ import { randomUUID } from 'crypto'
 
 const PLAN_PRICES: Record<string, string> = {
   pro: '500.00',
+  starter: '990.00',
+  growth: '2490.00',
+  premium: '4990.00',
 }
 
 const PLAN_LABELS: Record<string, string> = {
   pro: 'Pro',
+  starter: 'Starter',
+  growth: 'Growth',
+  premium: 'Premium',
 }
 
 export async function POST(request: NextRequest) {
@@ -42,7 +48,8 @@ export async function POST(request: NextRequest) {
       idempotenceKey: randomUUID(),
     })
 
-    return NextResponse.json({ url: payment.confirmation?.confirmation_url })
+    const confirmation_url = payment.confirmation?.confirmation_url
+    return NextResponse.json({ confirmation_url, url: confirmation_url })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error('[/api/yookassa/checkout]', message)
