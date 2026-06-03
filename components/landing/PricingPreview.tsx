@@ -14,7 +14,6 @@ const PLANS = [
     label: 'Бесплатно',
     price: '0',
     desc: 'Убедитесь что работает для вашей ниши',
-    roi: null,
     features: [
       '15 генераций',
       'Все 6 форматов контента',
@@ -31,7 +30,6 @@ const PLANS = [
     price: '990',
     period: '/мес',
     desc: 'Для регулярного контент-маркетинга',
-    roi: '1 лид окупает 3 месяца',
     features: [
       '100 генераций в месяц',
       'Quality Gate + авто-перезапись',
@@ -48,7 +46,6 @@ const PLANS = [
     period: '/мес',
     badge: 'Популярный',
     desc: 'Для серьёзного роста и отслеживания ROI',
-    roi: '2 лида в неделю = окупаемость',
     features: [
       '500 генераций в месяц',
       'Brand Voice Engine',
@@ -88,32 +85,30 @@ export function PricingPreview() {
     <section id="pricing" ref={ref} aria-label="Тарифы" className="bg-white py-16 sm:py-20 lg:py-28">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
 
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, ease }}
           className="text-center max-w-xl mx-auto mb-16"
         >
-          <p className="text-[0.8125rem] font-bold text-[#1D4ED8] uppercase tracking-[0.08em] mb-4">Тарифы</p>
+          <p className="text-sm font-medium text-[#8A8882] mb-5 tracking-wide">Тарифные планы</p>
           <h2
-            className="text-[#141414] mb-4"
+            className="text-[#111110] mb-4"
             style={{
               fontFamily: 'var(--font-space-grotesk)',
               fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontWeight: 800,
+              fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.035em',
             }}
           >
-            Начните бесплатно.<br />Платите когда видите результат
+            Простое ценообразование.<br />Без сюрпризов.
           </h2>
-          <p className="text-[#525252] text-lg">
-            Один лид окупает Starter-подписку на 3 месяца
+          <p className="text-[#494743] text-lg">
+            Начните бесплатно. Один лид окупает Starter на три месяца вперёд.
           </p>
         </motion.div>
 
-        {/* Plan cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto mb-8">
           {PLANS.map((plan, i) => (
             <motion.div
@@ -130,7 +125,6 @@ export function PricingPreview() {
                 boxShadow: plan.dark ? '0 20px 60px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.04)',
               }}
             >
-              {/* Badge */}
               {plan.badge && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span className="bg-[#1D4ED8] text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-[0_4px_14px_rgba(29,78,216,0.4)] whitespace-nowrap">
@@ -139,7 +133,6 @@ export function PricingPreview() {
                 </div>
               )}
 
-              {/* Label */}
               <p
                 className="text-xs font-bold uppercase tracking-wider mb-3"
                 style={{ color: plan.dark ? 'rgba(255,255,255,0.45)' : '#8A8A8A' }}
@@ -147,8 +140,7 @@ export function PricingPreview() {
                 {plan.label}
               </p>
 
-              {/* Price */}
-              <div className="flex items-end gap-1 mb-2">
+              <div className="flex items-end gap-1 mb-5">
                 <span
                   className="leading-none"
                   style={{
@@ -168,23 +160,6 @@ export function PricingPreview() {
                 )}
               </div>
 
-              {/* ROI chip */}
-              {plan.roi && (
-                <span
-                  className="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 self-start"
-                  style={
-                    plan.dark
-                      ? { color: '#6EE7B7', background: 'rgba(110,231,183,0.12)' }
-                      : { color: '#15803D', background: '#F0FDF4' }
-                  }
-                >
-                  {plan.roi}
-                </span>
-              )}
-
-              {!plan.roi && <div className="mb-6" />}
-
-              {/* Features */}
               <ul className="flex flex-col gap-3 mb-8 flex-1">
                 {plan.features.map(f => (
                   <li key={f} className="flex items-start gap-2.5 text-sm leading-snug" style={{ color: plan.dark ? 'rgba(255,255,255,0.75)' : '#525252' }}>
@@ -198,7 +173,6 @@ export function PricingPreview() {
                 ))}
               </ul>
 
-              {/* CTA */}
               {plan.href ? (
                 <Link
                   href={plan.href}
@@ -229,7 +203,6 @@ export function PricingPreview() {
           ))}
         </div>
 
-        {/* Trust */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}

@@ -28,7 +28,7 @@ export function LandingFooter() {
               aria-label="Revenue OS — на главную"
               className="inline-flex items-center gap-2.5 mb-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1D4ED8] rounded-sm"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[#1B40AE] flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-white" strokeWidth={2.5} />
               </div>
               <span className="font-extrabold text-sm text-[#141414] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -36,7 +36,7 @@ export function LandingFooter() {
               </span>
             </Link>
             <p className="text-sm text-[#8A8A8A] leading-relaxed max-w-[16rem]">
-              AI-контент под конверсии — Instagram, Telegram, Stories, Reels.
+              Контент-система для предпринимателей, которые считают результат.
             </p>
           </div>
 

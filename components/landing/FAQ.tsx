@@ -89,13 +89,13 @@ export function FAQ() {
             transition={{ duration: 0.55, ease }}
             className="lg:sticky lg:top-24"
           >
-            <p className="text-[0.8125rem] font-bold text-[#1D4ED8] uppercase tracking-[0.08em] mb-4">FAQ</p>
+            <p className="text-sm font-medium text-[#8A8882] mb-5 tracking-wide">FAQ</p>
             <h2
               className="text-[#141414] mb-4"
               style={{
                 fontFamily: 'var(--font-space-grotesk)',
                 fontSize: 'clamp(1.875rem, 3.5vw, 2.625rem)',
-                fontWeight: 800,
+                fontWeight: 700,
                 lineHeight: 1.12,
                 letterSpacing: '-0.035em',
               }}
@@ -103,7 +103,7 @@ export function FAQ() {
               Ответы на частые вопросы
             </h2>
             <p className="text-[#8A8A8A] text-[0.9375rem] leading-relaxed">
-              Остались вопросы? Пишите через кнопку обратной связи — ответим в течение часа.
+              Остались вопросы? Пишите нам — ответим в течение часа.
             </p>
           </motion.div>
 

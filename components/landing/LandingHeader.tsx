@@ -44,7 +44,7 @@ export function LandingHeader() {
           aria-label="Revenue OS — на главную"
           className="flex items-center gap-2.5 flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1D4ED8] rounded-md"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] flex items-center justify-center shadow-[0_4px_12px_rgba(124,58,237,0.3)]">
+          <div className="w-8 h-8 rounded-lg bg-[#1B40AE] flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-extrabold text-[0.9375rem] text-[#141414] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
