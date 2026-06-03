@@ -1,10 +1,28 @@
 'use client'
 
-import { GenerationOutput } from '@/types'
+import { GenerationOutput, QualityScore } from '@/types'
 import { ContentCard, CopyField, CopyAllButton } from './ContentCard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { motion } from 'framer-motion'
+import { ShieldCheck } from 'lucide-react'
+
+function QualityBadge({ score }: { score: QualityScore }) {
+  const colors: Record<string, { bg: string; text: string; border: string }> = {
+    S: { bg: 'rgba(16,185,129,0.1)', text: '#059669', border: 'rgba(16,185,129,0.3)' },
+    A: { bg: 'rgba(124,58,237,0.1)', text: '#7c3aed', border: 'rgba(124,58,237,0.3)' },
+    B: { bg: 'rgba(245,158,11,0.1)', text: '#d97706', border: 'rgba(245,158,11,0.3)' },
+    C: { bg: 'rgba(239,68,68,0.1)', text: '#dc2626', border: 'rgba(239,68,68,0.3)' },
+  }
+  const c = colors[score.grade] ?? colors.B
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold"
+      style={{ background: c.bg, color: c.text, borderColor: c.border }}>
+      <ShieldCheck className="w-3.5 h-3.5" />
+      Quality {score.grade} · {score.total}/100
+    </div>
+  )
+}
 
 interface OutputCardsProps {
   output: GenerationOutput
@@ -17,6 +35,7 @@ export function OutputCards({ output }: OutputCardsProps) {
   const scenes = output.reels_script?.scenes ?? []
   const hooks = output.viral_hooks ?? []
   const structure = output.telegram_post?.structure ?? []
+  const qs = output.quality_scores
 
   return (
     <motion.div
@@ -24,6 +43,19 @@ export function OutputCards({ output }: OutputCardsProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      {/* Quality Gate summary */}
+      {qs && (
+        <div className="flex items-center gap-3 p-3 rounded-xl mb-4 flex-wrap gap-y-2"
+          style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}>
+          <span className="text-xs font-semibold" style={{ color: '#6b5b95' }}>Quality Gate:</span>
+          <QualityBadge score={qs.instagram} />
+          <QualityBadge score={qs.telegram} />
+          <span className="text-xs ml-auto" style={{ color: '#9d8ec4' }}>
+            Общий: {qs.overall}/100 {qs.overall >= 80 ? '✓ Прошёл' : '↻ Переписан'}
+          </span>
+        </div>
+      )}
+
       <Tabs defaultValue="instagram" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="instagram">Instagram</TabsTrigger>
