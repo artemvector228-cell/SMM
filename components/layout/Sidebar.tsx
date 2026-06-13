@@ -3,18 +3,22 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Zap, Library, LayoutDashboard, Settings, TrendingUp, CalendarDays, CalendarRange, BarChart3, Brain, Star } from 'lucide-react'
+import {
+  Zap, Library, LayoutDashboard, Settings,
+  TrendingUp, CalendarDays, CalendarRange,
+  BarChart3, Brain, Star,
+} from 'lucide-react'
 
 const nav = [
-  { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
-  { href: '/generate', label: 'Генератор', icon: Zap },
-  { href: '/knowledge', label: 'База знаний', icon: Brain },
+  { href: '/dashboard',    label: 'Главная',      icon: LayoutDashboard },
+  { href: '/generate',     label: 'Генератор',    icon: Zap },
+  { href: '/knowledge',    label: 'База знаний',  icon: Brain },
   { href: '/content-plan', label: 'Контент-план', icon: CalendarRange },
-  { href: '/library', label: 'Библиотека', icon: Library },
-  { href: '/templates', label: 'Мои связки', icon: Star },
-  { href: '/analytics', label: 'Аналитика', icon: BarChart3 },
-  { href: '/schedule', label: 'Расписание', icon: CalendarDays },
-  { href: '/settings', label: 'Настройки', icon: Settings },
+  { href: '/library',      label: 'Библиотека',   icon: Library },
+  { href: '/templates',    label: 'Мои связки',   icon: Star },
+  { href: '/analytics',    label: 'Аналитика',    icon: BarChart3 },
+  { href: '/schedule',     label: 'Расписание',   icon: CalendarDays },
+  { href: '/settings',     label: 'Настройки',    icon: Settings },
 ]
 
 export function Sidebar({ forceVisible }: { forceVisible?: boolean } = {}) {
@@ -22,53 +26,67 @@ export function Sidebar({ forceVisible }: { forceVisible?: boolean } = {}) {
 
   return (
     <aside
-      className={forceVisible ? 'flex flex-col w-60 min-h-screen p-4 shrink-0 border-r' : 'hidden md:flex flex-col w-60 min-h-screen p-4 shrink-0 border-r'}
+      className={cn(
+        'flex flex-col w-60 min-h-screen shrink-0 border-r',
+        forceVisible ? 'flex' : 'hidden md:flex',
+      )}
       style={{
-        background: 'rgba(255,255,255,0.65)',
-        backdropFilter: 'blur(20px)',
-        borderColor: 'rgba(124,58,237,0.12)',
+        background: '#FFFFFF',
+        borderColor: '#E6E3DB',
         position: 'sticky',
         top: 0,
         height: '100vh',
       }}
     >
-      <div className="flex items-center gap-2.5 mb-8 px-2">
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 px-5 h-14 border-b shrink-0" style={{ borderColor: '#E6E3DB' }}>
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 12px #7c3aed35' }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: '#1B40AE' }}
         >
-          <TrendingUp className="w-4 h-4 text-white" />
+          <TrendingUp className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
         </div>
-        <span className="font-bold text-sm" style={{ color: '#1a1035' }}>Revenue OS</span>
+        <span
+          className="font-bold text-sm tracking-tight"
+          style={{ color: '#111110', fontFamily: 'var(--font-space-grotesk)' }}
+        >
+          Revenue OS
+        </span>
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1">
+      {/* Nav */}
+      <nav className="flex flex-col gap-0.5 flex-1 px-3 py-4 overflow-y-auto">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link
               key={href}
               href={href}
-              className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer')}
-              style={active ? {
-                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                color: 'white',
-                boxShadow: '0 4px 12px #7c3aed30',
-              } : {
-                color: '#6b5b95',
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer',
+              )}
+              style={
+                active
+                  ? { background: '#EDF0FB', color: '#1B40AE', fontWeight: 600 }
+                  : { color: '#494743' }
+              }
+              onMouseEnter={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = '#F5F4F0'
               }}
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)' }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+              onMouseLeave={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
+              }}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2.5 : 2} />
               {label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="mt-auto px-3 py-2 text-xs" style={{ color: '#9d8ec4' }}>
-        AI Revenue Content OS
+      {/* Footer */}
+      <div className="px-5 py-4 border-t shrink-0" style={{ borderColor: '#E6E3DB' }}>
+        <p className="text-xs" style={{ color: '#C0BDB8' }}>Revenue OS · AI контент-система</p>
       </div>
     </aside>
   )

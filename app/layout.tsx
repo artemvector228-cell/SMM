@@ -67,9 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="ru"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
-      style={{ colorScheme: 'light', background: '#f9f7ff' }}
+      style={{ colorScheme: 'light', background: '#F5F4F0' }}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased overscroll-none" style={{ background: '#f9f7ff' }}>
+      <body className="min-h-screen bg-background text-foreground antialiased overscroll-none" style={{ background: '#F5F4F0' }}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <QueryProvider>
             {children}
